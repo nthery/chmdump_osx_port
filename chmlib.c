@@ -194,7 +194,7 @@ read_chm_dir(chmfile *c)
   
   while (p < bufend) {
     nentries++;
-    namelen = *p++;
+    namelen = getencint(&p);
     p += namelen;
     section = getencint(&p);
     offset = getencint(&p);
