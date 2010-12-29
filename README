@@ -1,0 +1,12 @@
+This is a port of Matthew Russoto's chmdump to OSX Snow Leopard.
+
+This patchset is limited to the minimal changes required to resurect the original
+code.  No attempts have been made to further clean it up (e.g. fix warnings)
+nor ensure its portability to other platforms.
+
+Testing has been limited to exploding a couple of .chm files and checking some
+of the resulting .html files.
+
+The original lives at http://www.russotto.net/chm/.
+
+See header comments in source for license.
