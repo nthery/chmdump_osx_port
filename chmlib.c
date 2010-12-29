@@ -69,12 +69,12 @@ static int readheader(chmfile *c)
   int ret;
 
   fseek(c->cf, 0, SEEK_SET);
-  ret = fread(&c->ch, 1, sizeof(chmheader), c->cf);
+  ret = fread(&c->ch, sizeof(chmheader), 1, c->cf);
   guid_fix_endian(&c->ch.unk_guid1);
   guid_fix_endian(&c->ch.unk_guid2);
   FIXENDIAN32(c->ch.tot_hdrlen);
   fseek(c->cf, 0x58, SEEK_SET);
-  fread(&c->content_offset, 1, sizeof(c->content_offset), c->cf);
+  fread(&c->content_offset, sizeof(c->content_offset), 1, c->cf);
   FIXENDIAN32(c->content_offset);
 
 #ifdef DEBUG
@@ -114,7 +114,7 @@ static int readdirheader(chmfile *c)
   int result;
 
   fseek(c->cf, c->hs[DIR_HSECT].offset, SEEK_SET);
-  result = fread(&c->dh, 1, sizeof(dirheader), c->cf);
+  result = fread(&c->dh, sizeof(dirheader), 1, c->cf);
   FIXENDIAN32(c->dh.chunksize);
   FIXENDIAN32(c->dh.indexchunk);
   FIXENDIAN32(c->dh.ndirchunks);
@@ -152,6 +152,7 @@ static int
 read_chm_dir(chmfile *c)
 {
   int length;
+  int bodylength;
   dirheader dh;
   ubyte *buf;
   ubyte *bufend;
@@ -173,7 +174,7 @@ read_chm_dir(chmfile *c)
   pmglch.next_chunk = 0;
   do {
     fseek(c->cf, chunkstart + pmglch.next_chunk * c->dh.chunksize, SEEK_SET);
-    fread(&pmglch, 1, sizeof(pmglch), c->cf);
+    fread(&pmglch, sizeof(pmglch), 1, c->cf);
     FIXENDIAN32(pmglch.next_chunk);
     FIXENDIAN32(pmglch.prev_chunk);
     FIXENDIAN32(pmglch.quickreflen);
@@ -182,8 +183,9 @@ read_chm_dir(chmfile *c)
     fprintf(stderr, "next_chunk: %d\n", pmglch.next_chunk);
     fprintf(stderr, "quickreflen: %x\n", pmglch.quickreflen);
 #endif
-    length = fread(bufend, 1, c->dh.chunksize - sizeof(pmglch) - pmglch.quickreflen, c->cf);
-    bufend += length;
+    bodylength = c->dh.chunksize - sizeof(pmglch) - pmglch.quickreflen;
+    fread(bufend, c->dh.chunksize - sizeof(pmglch) - pmglch.quickreflen, 1, c->cf);
+    bufend += bodylength;
     nchunks++;
   }
   while ((pmglch.next_chunk != -1) && (nchunks < c->dh.ndirchunks));
@@ -263,7 +265,7 @@ chm_getfile(chmfile *c, char *name, ulong *length,
       fseek(c->cf, de->offset + offset, SEEK_SET);
       *length = de->length;
       *outbuf = malloc(*length);
-      fread(*outbuf, 1, *length, c->cf);
+      fread(*outbuf, *length, 1, c->cf);
   }
   else if (c->cs->entry[section].cache) {
       *length = de->length;
