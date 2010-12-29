@@ -1,9 +1,9 @@
-LIBOBJS = chmlib.o lzx.o
-CFLAGS = -DDEBUG
-PROGS = chmdump
+PROG = chmdump
 
-chmdump: $(LIBOBJS) chmdump.o
-	$(LINK.c) -o $@ $^
+SRCS = chmdump.c chmlib.c lzx.c
 
-clean:
-	rm -f *.o *~ \#* core $(PROGS)
+CFLAGS = -g -Wall -DDEBUG
+
+NO_MAN =
+
+.include <bsd.prog.mk>
