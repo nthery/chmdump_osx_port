@@ -1,27 +1,29 @@
 /* CHMtools v0.1 */
 /* Copyright 2001 Matthew T. Russotto */
-/*  
+/*
     This file is part of CHMtools
 
     CHMtools is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation; either version 2 of the License, or
     (at your option) any later version.
-    
+
     CHMtools is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
-    
+
     You should have received a copy of the GNU General Public License
     along with this program; if not, write to the Free Software
     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <stdio.h>
-typedef unsigned long ulong;
-// typedef unsigned short ushort; Already defined for Darwin
-typedef unsigned char ubyte;
+#include <stdint.h>
+
+typedef uint32_t ulong;
+typedef uint16_t ushort;
+typedef uint8_t ubyte;
 
 typedef struct guid_t
 {
@@ -45,7 +47,7 @@ typedef struct hsecentry {
   ulong offset;
   ulong offset_hi; /* note that CHMLib does not support >4GB files */
   ulong length;
-  ulong length_hi; 
+  ulong length_hi;
 } hsecentry;
 
 typedef hsecentry hsectable[2];
@@ -66,7 +68,7 @@ typedef struct dirheader {
   ulong unk5;        /* 0x02 */
   ulong tree_depth;        /* 1 if there is no index chunk, 2 if there is one.  CHMTools does not handle higher numbers */
   ulong indexchunk;  /* -1 if none, but 0 (probably erroneously) in at least one file */
-  ulong firstpmglchunk; 
+  ulong firstpmglchunk;
   ulong lastpmglchunk;
   ulong unk8;        /* 0xFFFFFFFF */
   ulong ndirchunks;
@@ -124,7 +126,7 @@ typedef struct chmfile
 } chmfile;
 
 
-int 
+int
 chm_getfile(chmfile *c, char *name, ulong *length,
 	    ubyte **outbuf);
 
