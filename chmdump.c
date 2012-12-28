@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <errno.h>
 #include "chmlib.h"
+#include <sys/stat.h>
 
 static void  usage(char *pname)
 {
@@ -21,10 +22,12 @@ main(int argc, char *argv[])
   int i;
   ubyte *outbuf;
   int namelen;
+  char *outfile;
   char *rel;
   char dirname[PATH_MAX];
   int err;
   FILE *f;
+  struct stat *sb;
 
   if (3 != argc) {
     usage(argv[0]);
@@ -58,33 +61,38 @@ main(int argc, char *argv[])
   }
   
   for (i = 0; i < c->dir->nentries; i++) {
-    if (c->dir->entry[i].name[0] == '/') {
-      namelen = strlen(c->dir->entry[i].name);
-      if (namelen == 1) continue; /* skip the slash */
-      rel = c->dir->entry[i].name + 1;
-      if (c->dir->entry[i].name[namelen-1] == '/') {
-	strncpy(dirname, rel, namelen-2);
-	dirname[namelen-2] = 0;
-	err = mkdir(dirname, 0777);
-	if (err != 0) {
-	  fprintf(stderr, "mkdir failed on %s\n", dirname);
-	  perror("mkdir");
-	  exit(-1);
-	}
+      dirname[0]=0;
+      if (c->dir->entry[i].name[0] == '/' && (namelen=strlen(c->dir->entry[i].name)) != 1){
+          outfile = c->dir->entry[i].name + 1;
+          rel = index(c->dir->entry[i].name + 1,'/');
+          while(rel != NULL) {
+              strncpy(dirname,c->dir->entry[i].name+1,rel - c->dir->entry[i].name+1);
+              dirname[rel - c->dir->entry[i].name]=0;
+              err = stat(dirname,sb);
+              if (err != 0) {
+                  err = mkdir(dirname, 0777);
+                  if (err != 0) {
+                      fprintf(stderr, "mkdir failed on %s\n", dirname);
+                      perror("mkdir");
+                  }
+              }
+              rel=index(rel+1,'/');
+          }
+
+          if (c->dir->entry[i].name[namelen-1] != '/') {
+              chm_getfile(c, c->dir->entry[i].name, &length, &outbuf);
+              fprintf(stderr, "writing %s\n", outfile);
+              f = fopen(outfile, "wb");
+              if (!f) {
+                  fprintf(stderr, "Couldn't open %s\n", outfile);
+                  perror("fopen");
+                  exit(-1);
+              }
+              fwrite(outbuf, 1, length, f);
+              fclose(f);
+              if (outbuf) free(outbuf);
+          }
       }
-      else {
-	chm_getfile(c, c->dir->entry[i].name, &length, &outbuf);
-	f = fopen(rel, "wb");
-	if (!f) {
-	  fprintf(stderr, "Couldn't open %s\n", rel);
-	  perror("fopen");
-	  exit(-1);
-	}
-	fwrite(outbuf, 1, length, f);
-	fclose(f);
-	if (outbuf) free(outbuf);
-      }
-    }
   }
   chm_close(c);
 }
